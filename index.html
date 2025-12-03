@@ -26,14 +26,15 @@
         color: #ffdd00;
         text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffdd00;
         white-space: pre-line;
+        z-index: 2;
     }
 
-    #birthdayImage {
+    .birthdayImage {
         width: 300px;
-        height: auto;
         border-radius: 10px;
         margin-top: 20px;
-        z-index: 1;
+        display: none;
+        z-index: 2;
     }
 
     canvas {
@@ -54,16 +55,16 @@
 
 <div id="birthdayMessage"></div>
 
+<!-- IMAGES GO **HERE**, not inside JS -->
+<img class="birthdayImage" src="images/image1.jpg">
+<img class="birthdayImage" src="images/image2.jpg">
 
 <script>
+// CONFETTI
 const canvas = document.getElementById('confetti');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
-<img class="birthdayImage" src="images/image1.jpg" alt="Birthday Image">
-<img class="birthdayImage" src="images/image2.jpg" alt="Birthday Image" style="display:none;">
-
 
 class Confetti {
     constructor() {
@@ -78,7 +79,7 @@ class Confetti {
     update() {
         this.y += this.speed;
         this.angle += this.angularSpeed;
-        if(this.y > canvas.height) this.y = -this.radius;
+        if (this.y > canvas.height) this.y = -this.radius;
     }
     draw() {
         ctx.save();
@@ -91,26 +92,27 @@ class Confetti {
 }
 
 const confettis = [];
-for(let i =0;i<150;i++) confettis.push(new Confetti());
+for (let i = 0; i < 150; i++) confettis.push(new Confetti());
 
 function animate() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     confettis.forEach(c => { c.update(); c.draw(); });
     requestAnimationFrame(animate);
 }
-
 animate();
 
-// Slideshow for images
-let imgs = document.querySelectorAll('#birthdayImage');
+// IMAGE SLIDESHOW
+let imgs = document.querySelectorAll('.birthdayImage');
 let current = 0;
+imgs[0].style.display = 'block'; // show first image
+
 setInterval(() => {
     imgs[current].style.display = 'none';
-    current = (current+1)%imgs.length;
+    current = (current + 1) % imgs.length;
     imgs[current].style.display = 'block';
-}, 5000); // 5 sec interval
+}, 4000);
 
-// Typing effect for message
+// TYPING EFFECT
 const message = `Hey Aditi! 😎
 
 Happy Birthday meri sabse crazy, mast aur thodi badi bakar bestfriend ko!
@@ -124,29 +126,25 @@ Lekin sach ye hai ki — yeh saare versions milke hi tu perfect best friend bant
 Aisi friend har kisi ko nahi milti. Tu jaisi bhi hai — irritating + funny + caring + thodi pagal — sab mila ke tu ek hi piece hai.
 Aur honestly, main lucky hoon ki tu meri best friend hai. 💛
 
-Aaj ke din bas itna hi bolunga — enjoy your day Aditi, aur haan, aaj ke din thoda kam irritate karna… but thodi si karna zaroor, warna lagta hai birthday hi fake tha! 😜
+Enjoy your day Aditi! 😜
 
-Love,
-Krishna`;
+— Krishna`;
 
 let i = 0;
-const typingSpeed = 50; // milliseconds
-const messageDiv = document.getElementById('birthdayMessage');
+const speed = 50;
+const msgBox = document.getElementById('birthdayMessage');
 
-function typeMessage() {
-    if(i < message.length){
-        messageDiv.innerHTML += message.charAt(i);
+function type() {
+    if (i < message.length) {
+        msgBox.innerHTML += message.charAt(i);
         i++;
-        setTimeout(typeMessage, typingSpeed);
+        setTimeout(type, speed);
     }
 }
-
-typeMessage();
+type();
 </script>
 
 </body>
 </html>
-
-
 
 
