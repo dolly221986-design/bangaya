@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DoFlow — AI-Powered To-Do App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f13;--surface:#17171e;--surface2:#1e1e28;--surface3:#23232f;
+  --border:#2a2a38;--border2:#32324a;
+  --accent:#7c6ef7;--accent2:#5ee7b8;--accent3:#f7a05e;--danger:#f76e6e;
+  --text:#e8e8f0;--muted:#6b6b85;--label:#9898b8;
+  --r:14px;--r2:10px;--r3:8px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}
+#app{display:grid;grid-template-columns:260px 1fr;height:100vh;overflow:hidden}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);padding:0 8px 20px;letter-spacing:-0.5px}
+.logo span{color:var(--accent2)}
+.logo small{display:block;font-size:11px;font-weight:400;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r3);cursor:pointer;font-size:14px;color:var(--label);transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(124,110,247,0.15);color:var(--accent);font-weight:500}
+.badge{margin-left:auto;background:var(--accent);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:500}
+.badge.g{background:var(--accent2);color:#0f0f13}
+.sec-label{font-size:11px;color:var(--muted);padding:14px 12px 5px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:20px 28px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.topbar h1{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;flex:1}
+.search-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r3);padding:8px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;width:200px;outline:none}
+.search-box:focus{border-color:var(--accent)}
+.search-box::placeholder{color:var(--muted)}
+.btn{padding:8px 18px;border-radius:var(--r3);border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#6b5ee6;transform:translateY(-1px)}
+.content{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px;display:flex;flex-direction:column;gap:5px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
+.stat-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800}
+.stat-bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.stat-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+.two-col{display:grid;grid-template-columns:1fr 360px;gap:18px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px}
+.panel-header{display:flex;align-items:center;gap:8px}
+.panel-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1}
+.pact{font-size:12px;color:var(--accent);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:3px 8px;border-radius:6px;transition:background 0.1s}
+.pact:hover{background:rgba(124,110,247,0.1)}
+.task-list{display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:260px}
+.task-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r3);background:var(--surface2);border:1px solid transparent;transition:all 0.15s;animation:slideIn 0.2s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.task-item:hover{border-color:var(--border2)}
+.task-item.done{opacity:0.45}
+.task-item.done .task-name{text-decoration:line-through;color:var(--muted)}
+.check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all 0.15s;font-size:10px;font-weight:700;color:#fff}
+.check:hover{border-color:var(--accent)}
+.check.checked{background:var(--accent);border-color:var(--accent)}
+.task-name{font-size:14px;flex:1}
+.prio-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.prio-dot.high{background:#f76e6e}
+.prio-dot.med{background:#f7a05e}
+.prio-dot.low{background:#5ee7b8}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.tag-work{background:rgba(124,110,247,0.2);color:#a89ef9}
+.tag-personal{background:rgba(94,231,184,0.15);color:#5ee7b8}
+.tag-urgent{background:rgba(247,110,110,0.2);color:#f76e6e}
+.del-btn{font-size:16px;color:var(--muted);cursor:pointer;border:none;background:none;line-height:1;transition:color 0.1s;padding:0 2px}
+.del-btn:hover{color:var(--danger)}
+.add-row{display:flex;gap:8px}
+.task-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r3);padding:9px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border 0.15s}
+.task-input:focus{border-color:var(--accent)}
+.task-input::placeholder{color:var(--muted)}
+select.sel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r3);padding:9px 10px;color:var(--label);font-size:13px;outline:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.right-col{display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.chart-wrap{position:relative;width:100%}
+
+/* AI Panel */
+.ai-panel{background:var(--surface);border:1px solid rgba(124,110,247,0.35);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.ai-panel::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(124,110,247,0.06) 0%,transparent 70%);pointer-events:none}
+.ai-panel-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+.ai-spark{width:22px;height:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:5px;font-size:12px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.ai-input-row{display:flex;gap:8px}
+.ai-textarea{flex:1;background:var(--surface2);border:1px solid rgba(124,110,247,0.25);border-radius:var(--r3);padding:10px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;transition:border 0.15s;line-height:1.5}
+.ai-textarea:focus{border-color:var(--accent)}
+.ai-textarea::placeholder{color:var(--muted)}
+.btn-ai{background:linear-gradient(135deg,var(--accent),#5b4fd4);color:#fff;border:none;border-radius:var(--r3);padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;align-self:flex-end}
+.btn-ai:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-ai:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.ai-response{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r3);padding:14px;font-size:13px;color:var(--label);line-height:1.7;max-height:200px;overflow-y:auto}
+.ai-response.loading{display:flex;align-items:center;gap:10px}
+.dots{display:flex;gap:5px}
+.dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:0.2s}
+.dots span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+.suggestion-chips{display:flex;flex-direction:column;gap:7px}
+.chip{background:rgba(124,110,247,0.08);border:1px solid rgba(124,110,247,0.2);border-radius:var(--r3);padding:10px 14px;font-size:13px;color:var(--label);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;line-height:1.4}
+.chip:hover{background:rgba(124,110,247,0.15);border-color:var(--accent);color:var(--text)}
+.chip-add{margin-left:auto;font-size:11px;color:var(--accent);font-weight:500;flex-shrink:0;background:rgba(124,110,247,0.15);padding:2px 8px;border-radius:20px}
+.quick-prompts{display:flex;flex-wrap:wrap;gap:6px}
+.qp{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.qp:hover{border-color:var(--accent);color:var(--accent)}
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0}
+.timer-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--accent);letter-spacing:3px}
+.timer-sub{font-size:12px;color:var(--muted)}
+.timer-btns{display:flex;gap:8px}
+.tsm{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--label);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.tsm:hover{border-color:var(--accent);color:var(--accent)}
+.tsm.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.streak-days{display:flex;gap:5px;flex-wrap:wrap;padding:2px 0}
+.sd{width:18px;height:18px;border-radius:4px;background:var(--border)}
+.sd.d{background:var(--accent)}
+.sd.t{background:var(--accent2)}
+.divider{height:1px;background:var(--border)}
+.cat-mini{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0}
+.cat-bar-w{width:90px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.cat-bar-f{height:100%;border-radius:3px;transition:width 0.6s ease}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="sidebar">
+    <div class="logo">Do<span>Flow</span><small>✦ AI-Powered</small></div>
+    <button class="nav-item active" onclick="setView('today',this)">☀ Today <span class="badge" id="b-today">0</span></button>
+    <button class="nav-item" onclick="setView('all',this)">◉ All Tasks <span class="badge g" id="b-all">0</span></button>
+    <button class="nav-item" onclick="setView('done',this)">✓ Completed</button>
+    <button class="nav-item" onclick="setView('high',this)">▲ High Priority</button>
+    <div class="sec-label">Projects</div>
+    <button class="nav-item" onclick="setView('work',this)"><span style="color:#a89ef9">◆</span> Work</button>
+    <button class="nav-item" onclick="setView('personal',this)"><span style="color:#5ee7b8">◆</span> Personal</button>
+    <div class="sec-label">Categories</div>
+    <div style="padding:0 6px">
+      <div class="cat-mini"><span style="color:var(--muted)">Work</span><div class="cat-bar-w"><div class="cat-bar-f" id="cb-work" style="background:#a89ef9"></div></div></div>
+      <div class="cat-mini"><span style="color:var(--muted)">Personal</span><div class="cat-bar-w"><div class="cat-bar-f" id="cb-personal" style="background:#5ee7b8"></div></div></div>
+      <div class="cat-mini"><span style="color:var(--muted)">Urgent</span><div class="cat-bar-w"><div class="cat-bar-f" id="cb-urgent" style="background:#f76e6e"></div></div></div>
+      <div class="divider" style="margin:8px 0"></div>
+    </div>
+    <div class="streak-days" id="streak" style="padding:2px 8px"></div>
+    <div style="font-size:11px;color:var(--muted);padding:3px 8px">7-day activity streak</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="view-title">Today's Focus</h1>
+      <input class="search-box" placeholder="Search tasks..." id="search" oninput="renderTasks()">
+      <button class="btn btn-primary" onclick="toggleAdd()">+ Add Task</button>
+    </div>
+    <div class="content">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-val" id="s-tot">0</div><div class="stat-bar"><div class="stat-fill" id="sf-tot" style="background:var(--accent);width:0%"></div></div></div>
+        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-val" id="s-done">0</div><div class="stat-bar"><div class="stat-fill" id="sf-done" style="background:var(--accent2);width:0%"></div></div></div>
+        <div class="stat-card"><div class="stat-label">High Priority</div><div class="stat-val" id="s-high">0</div><div class="stat-bar"><div class="stat-fill" id="sf-high" style="background:#f76e6e;width:0%"></div></div></div>
+        <div class="stat-card"><div class="stat-label">Day Streak</div><div class="stat-val" id="s-str">7</div><div class="stat-bar"><div class="stat-fill" id="sf-str" style="background:var(--accent3);width:70%"></div></div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title" id="panel-title">Tasks</div>
+            <button class="pact" onclick="setPF('all')">All</button>
+            <button class="pact" onclick="setPF('high')">High</button>
+            <button class="pact" onclick="setPF('med')">Medium</button>
+          </div>
+          <div class="add-row" id="add-row" style="display:none">
+            <input class="task-input" id="task-inp" placeholder="Task title..." onkeydown="if(event.key==='Enter')addTask()">
+            <select class="sel" id="prio-s"><option value="med">Med</option><option value="high">High</option><option value="low">Low</option></select>
+            <select class="sel" id="cat-s"><option value="work">Work</option><option value="personal">Personal</option><option value="urgent">Urgent</option></select>
+            <button class="btn btn-primary" onclick="addTask()">Add</button>
+          </div>
+          <div class="task-list" id="task-list"></div>
+          <div style="margin-top:4px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Weekly activity</div>
+            <div class="chart-wrap" style="height:100px"><canvas id="wk-chart" role="img" aria-label="Weekly task completion bar chart">Weekly completed tasks.</canvas></div>
+          </div>
+        </div>
+
+        <div class="right-col">
+          <div class="ai-panel">
+            <div class="ai-panel-title"><span class="ai-spark">✦</span> AI Task Assistant</div>
+            <div class="quick-prompts">
+              <span class="qp" onclick="setPrompt('Suggest 3 productive work tasks for today')">Work tasks</span>
+              <span class="qp" onclick="setPrompt('What should I prioritize from my current task list?')">Prioritize</span>
+              <span class="qp" onclick="setPrompt('Give me 3 personal wellness tasks for today')">Wellness</span>
+              <span class="qp" onclick="setPrompt('Help me break a big project into smaller actionable tasks')">Break down project</span>
+            </div>
+            <div class="ai-input-row">
+              <textarea class="ai-textarea" id="ai-input" rows="2" placeholder="Ask AI: suggest tasks, prioritize your day, plan a project..."></textarea>
+              <button class="btn-ai" id="ai-btn" onclick="askAI()">Ask ✦</button>
+            </div>
+            <div id="ai-response" style="display:none" class="ai-response"></div>
+            <div id="ai-chips" class="suggestion-chips" style="display:none"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Priority Breakdown</div></div>
+            <div class="chart-wrap" style="height:130px"><canvas id="pie-chart" role="img" aria-label="Task priority donut chart">Priority distribution.</canvas></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Focus Timer</div></div>
+            <div class="timer-wrap">
+              <div class="timer-num" id="t-display">25:00</div>
+              <div class="timer-sub" id="t-label">Pomodoro — Stay focused!</div>
+              <div class="timer-btns">
+                <button class="tsm" id="t-btn" onclick="toggleTimer()">Start</button>
+                <button class="tsm" onclick="resetTimer()">Reset</button>
+                <button class="tsm" onclick="setTimer(25,'Pomodoro')">25m</button>
+                <button class="tsm" onclick="setTimer(5,'Short Break')">5m</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let tasks=[
+  {id:1,name:'Design dashboard mockups',done:false,prio:'high',cat:'work'},
+  {id:2,name:'Review pull requests',done:true,prio:'med',cat:'work'},
+  {id:3,name:'Team standup meeting',done:false,prio:'high',cat:'urgent'},
+  {id:4,name:'Write blog post draft',done:false,prio:'med',cat:'personal'},
+  {id:5,name:'Grocery shopping',done:true,prio:'low',cat:'personal'},
+  {id:6,name:'Fix critical bug #482',done:false,prio:'high',cat:'urgent'},
+];
+let nid=7,view='today',pf='all',timerSecs=25*60,timerOn=false,timerIv=null;
+let wkChart,pieChart;
+
+function setView(v,el){
+  view=v;
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={today:"Today's Focus",all:"All Tasks",done:"Completed",high:"High Priority",work:"Work Tasks",personal:"Personal Tasks"};
+  document.getElementById('view-title').textContent=titles[v]||'Tasks';
+  document.getElementById('panel-title').textContent=titles[v]||'Tasks';
+  renderTasks();
+}
+function setPF(p){pf=p;renderTasks();}
+function toggleAdd(){
+  const r=document.getElementById('add-row');
+  r.style.display=r.style.display==='none'?'flex':'none';
+  if(r.style.display==='flex')document.getElementById('task-inp').focus();
+}
+function addTask(){
+  const n=document.getElementById('task-inp').value.trim();
+  if(!n)return;
+  tasks.push({id:nid++,name:n,done:false,prio:document.getElementById('prio-s').value,cat:document.getElementById('cat-s').value});
+  document.getElementById('task-inp').value='';
+  renderAll();
+}
+function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;renderAll();}}
+function delTask(id){tasks=tasks.filter(t=>t.id!==id);renderAll();}
+function addFromChip(name,prio){
+  tasks.push({id:nid++,name,done:false,prio:prio||'med',cat:'work'});
+  renderAll();
+}
+function getFiltered(){
+  let list=[...tasks];
+  const q=document.getElementById('search').value.toLowerCase();
+  if(q)list=list.filter(t=>t.name.toLowerCase().includes(q));
+  if(view==='done')list=list.filter(t=>t.done);
+  else if(view==='high')list=list.filter(t=>t.prio==='high');
+  else if(view==='work')list=list.filter(t=>t.cat==='work');
+  else if(view==='personal')list=list.filter(t=>t.cat==='personal');
+  if(pf!=='all')list=list.filter(t=>t.prio===pf);
+  return list;
+}
+function renderTasks(){
+  const tl=document.getElementById('task-list');
+  const list=getFiltered();
+  tl.innerHTML=list.length?list.map(t=>`
+    <div class="task-item${t.done?' done':''}">
+      <div class="check${t.done?' checked':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+      <div class="prio-dot ${t.prio}"></div>
+      <span class="task-name">${t.name}</span>
+      <span class="tag tag-${t.cat}">${t.cat}</span>
+      <button class="del-btn" onclick="delTask(${t.id})">×</button>
+    </div>`).join('')
+    :'<div style="color:var(--muted);font-size:14px;padding:20px 0;text-align:center">No tasks here. Add one above!</div>';
+  updateStats();updateSidebar();updateCharts();
+}
+function updateStats(){
+  const tot=tasks.length,done=tasks.filter(t=>t.done).length,high=tasks.filter(t=>t.prio==='high'&&!t.done).length;
+  document.getElementById('s-tot').textContent=tot;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-high').textContent=high;
+  document.getElementById('sf-tot').style.width=Math.min(100,tot*8)+'%';
+  document.getElementById('sf-done').style.width=tot?Math.round(done/tot*100)+'%':'0%';
+  document.getElementById('sf-high').style.width=Math.min(100,high*15)+'%';
+  document.getElementById('b-today').textContent=tasks.filter(t=>!t.done).length;
+  document.getElementById('b-all').textContent=tasks.length;
+}
+function updateSidebar(){
+  const w=tasks.filter(t=>t.cat==='work').length,p=tasks.filter(t=>t.cat==='personal').length,u=tasks.filter(t=>t.cat==='urgent').length,mx=Math.max(w,p,u,1);
+  document.getElementById('cb-work').style.width=Math.round(w/mx*100)+'%';
+  document.getElementById('cb-personal').style.width=Math.round(p/mx*100)+'%';
+  document.getElementById('cb-urgent').style.width=Math.round(u/mx*100)+'%';
+  document.getElementById('streak').innerHTML=Array.from({length:7},(_,i)=>`<div class="sd${i<6?' d':' t'}"></div>`).join('');
+}
+function updateCharts(){
+  const done=tasks.filter(t=>t.done).length;
+  const high=tasks.filter(t=>t.prio==='high').length,med=tasks.filter(t=>t.prio==='med').length,low=tasks.filter(t=>t.prio==='low').length;
+  if(wkChart){wkChart.data.datasets[0].data=[3,5,4,7,6,4,done];wkChart.update();}
+  if(pieChart){pieChart.data.datasets[0].data=[high||0,med||0,low||0];pieChart.update();}
+}
+function renderAll(){renderTasks();}
+
+function setPrompt(p){document.getElementById('ai-input').value=p;}
+
+async function askAI(){
+  const inp=document.getElementById('ai-input');
+  const prompt=inp.value.trim();
+  if(!prompt)return;
+  const btn=document.getElementById('ai-btn');
+  btn.disabled=true;btn.textContent='...';
+  const resp=document.getElementById('ai-response');
+  const chips=document.getElementById('ai-chips');
+  resp.style.display='flex';resp.className='ai-response loading';
+  resp.innerHTML='<div class="dots"><span></span><span></span><span></span></div><span style="color:var(--muted);font-size:13px">AI is thinking...</span>';
+  chips.style.display='none';chips.innerHTML='';
+
+  const taskSummary=tasks.map(t=>`- ${t.name} [${t.prio} priority, ${t.cat}, ${t.done?'done':'pending'}]`).join('\n');
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are DoFlow AI, a smart productivity assistant inside a to-do app.
+The user's current tasks:
+${taskSummary}
+
+When suggesting tasks, respond ONLY in this JSON format (no markdown, no extra text):
+{
+  "message": "A brief helpful message (1-2 sentences)",
+  "suggestions": [
+    {"task": "Task name", "priority": "high|med|low", "reason": "Brief reason max 8 words"},
+    {"task": "Task name", "priority": "high|med|low", "reason": "Brief reason max 8 words"},
+    {"task": "Task name", "priority": "high|med|low", "reason": "Brief reason max 8 words"}
+  ]
+}
+
+For general questions:
+{
+  "message": "Your helpful response here",
+  "suggestions": []
+}
+
+Be concise, practical, and motivating.`,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await res.json();
+    const text=data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    let parsed;
+    try{parsed=JSON.parse(text);}catch(e){parsed={message:text,suggestions:[]};}
+
+    resp.className='ai-response';
+    resp.style.display='block';
+    resp.innerHTML=`<span style="color:var(--accent2);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px">✦ DoFlow AI</span><br><br>${parsed.message||text}`;
+
+    if(parsed.suggestions&&parsed.suggestions.length){
+      chips.style.display='flex';
+      chips.innerHTML=parsed.suggestions.map(s=>`
+        <div class="chip" onclick="addFromChip('${s.task.replace(/'/g,"\\'")}','${s.priority}')">
+          <span class="prio-dot ${s.priority}" style="flex-shrink:0;margin-top:2px"></span>
+          <span style="flex:1">${s.task}<br><span style="font-size:11px;color:var(--muted)">${s.reason}</span></span>
+          <span class="chip-add">+ Add</span>
+        </div>`).join('');
+    }
+  }catch(e){
+    resp.className='ai-response';
+    resp.style.display='block';
+    resp.innerHTML=`<span style="color:var(--danger)">Could not connect to AI. Please check your connection and try again.</span>`;
+  }
+  btn.disabled=false;btn.textContent='Ask ✦';
+}
+
+function toggleTimer(){
+  if(timerOn){clearInterval(timerIv);timerOn=false;document.getElementById('t-btn').textContent='Start';document.getElementById('t-btn').classList.remove('on');}
+  else{timerOn=true;document.getElementById('t-btn').textContent='Pause';document.getElementById('t-btn').classList.add('on');
+    timerIv=setInterval(()=>{
+      if(timerSecs>0){timerSecs--;updTimer();}
+      else{clearInterval(timerIv);timerOn=false;timerSecs=5*60;updTimer();
+        document.getElementById('t-label').textContent="Time's up! Take a break!";
+        document.getElementById('t-btn').textContent='Start';
+        document.getElementById('t-btn').classList.remove('on');
+      }
+    },1000);
+  }
+}
+function resetTimer(){clearInterval(timerIv);timerOn=false;timerSecs=25*60;updTimer();document.getElementById('t-btn').textContent='Start';document.getElementById('t-btn').classList.remove('on');document.getElementById('t-label').textContent='Pomodoro — Stay focused!';}
+function setTimer(m,l){clearInterval(timerIv);timerOn=false;timerSecs=m*60;updTimer();document.getElementById('t-btn').textContent='Start';document.getElementById('t-btn').classList.remove('on');document.getElementById('t-label').textContent=l;}
+function updTimer(){const m=Math.floor(timerSecs/60),s=timerSecs%60;document.getElementById('t-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+
+window.addEventListener('load',()=>{
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  wkChart=new Chart(document.getElementById('wk-chart'),{
+    type:'bar',
+    data:{labels:days,datasets:[{data:[3,5,4,7,6,4,tasks.filter(t=>t.done).length],backgroundColor:['#2d2a50','#2d2a50','#2d2a50','#2d2a50','#2d2a50','#2d2a50','#7c6ef7'],borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b6b85',font:{size:11}},grid:{display:false},border:{display:false}},y:{ticks:{color:'#6b6b85',font:{size:11},maxTicksLimit:4},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}}}}
+  });
+  pieChart=new Chart(document.getElementById('pie-chart'),{
+    type:'doughnut',
+    data:{labels:['High','Med','Low'],datasets:[{data:[tasks.filter(t=>t.prio==='high').length,tasks.filter(t=>t.prio==='med').length,tasks.filter(t=>t.prio==='low').length],backgroundColor:['#f76e6e','#f7a05e','#5ee7b8'],borderWidth:0,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{color:'#9898b8',font:{size:12},boxWidth:10,padding:12}}}}
+  });
+  renderTasks();
+});
+</script>
+</body>
+</html>
